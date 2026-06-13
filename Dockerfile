@@ -23,6 +23,7 @@ RUN apt-get update && \
         net-tools \
         zip \
         p7zip-full \
+        p7zip-rar \
         vim \
         wget \
         git \
