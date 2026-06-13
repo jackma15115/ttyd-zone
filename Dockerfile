@@ -5,10 +5,14 @@ LABEL maintainer="your-email@example.com"
 ENV TTYD_VERSION="1.7.7"
 ENV TTYD_ARCH="x86_64"
 
-# 配置环境变量，统一字符集
+# 配置语言环境变量
 ENV LANG=zh_CN.UTF-8
 ENV LANGUAGE=zh_CN.UTF-8
 ENV LC_ALL=zh_CN.UTF-8
+
+# 配置 NVM 环境变量
+ENV NVM_DIR="/root/.nvm"
+ENV NVM_VERSION="v0.39.7"
 
 RUN apt-get update && \
     apt-get install -y \
@@ -24,9 +28,7 @@ RUN apt-get update && \
         git \
         sudo \
         libxslt1-dev \
-        libc-ares-dev \
-        nodejs \
-        npm && \
+        libc-ares-dev && \
     \
     # 1. 配置语言环境
     sed -i -e 's/# \(zh_CN.UTF-8\)/\1/' /etc/locale.gen && \
@@ -39,11 +41,20 @@ RUN apt-get update && \
          -o /usr/local/bin/ttyd && \
     chmod +x /usr/local/bin/ttyd && \
     \
-    # 3. 预装 wrangler (npx 包含在 npm 中，全局安装可确保开箱即用)
-    echo "Installing wrangler globally..." && \
+    # 3. 安装 NVM、Node.js LTS 并全局预装 Wrangler
+    echo "Installing nvm, Node.js LTS, and wrangler..." && \
+    curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh" | bash && \
+    # 加载 nvm 脚本以便在当前 RUN 层中使用
+    . "$NVM_DIR/nvm.sh" && \
+    nvm install --lts && \
+    nvm use --lts && \
+    nvm alias default 'lts/*' && \
     npm install -g wrangler && \
     \
-    # 4. 清理工作：保留必要的 curl 和证书，只清理 apt 缓存减小体积
+    # 4. 确保默认 shell 为 bash，这样登录时能正确读取 ~/.bashrc 中的 nvm 配置
+    chsh -s /bin/bash root && \
+    \
+    # 5. 清理工作 (保留 curl 和证书供后续开发使用)
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
