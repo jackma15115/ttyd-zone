@@ -24,6 +24,7 @@ RUN sed -i 's/Components: main/Components: main non-free contrib/g' /etc/apt/sou
         locales \
         net-tools \
         zip \
+        jq \
         p7zip-full \
         p7zip-rar \
         vim \
